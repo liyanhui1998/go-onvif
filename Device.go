@@ -9,11 +9,12 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"onvif/soap"
-	"onvif/types/device"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/liyanhui1998/go-onvif/soap"
+	"github.com/liyanhui1998/go-onvif/types/device"
 
 	"github.com/beevik/etree"
 )

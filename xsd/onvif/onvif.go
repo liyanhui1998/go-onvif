@@ -1,7 +1,7 @@
 package onvif
 
 import (
-	"onvif/xsd"
+	"github.com/liyanhui1998/go-onvif/xsd"
 )
 
 // BUG(r): Enum types implemented as simple string

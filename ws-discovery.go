@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"onvif/soap"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/liyanhui1998/go-onvif/soap"
 
 	"github.com/beevik/etree"
 	"github.com/gofrs/uuid"
