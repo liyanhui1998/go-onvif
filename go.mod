@@ -1,4 +1,4 @@
-module onvif
+module github.com/liyanhui1998/go-onvif
 
 go 1.17
 
