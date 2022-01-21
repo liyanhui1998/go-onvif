@@ -1,6 +1,8 @@
 package media
 
 import (
+	"encoding/xml"
+
 	"github.com/liyanhui1998/go-onvif/xsd"
 	"github.com/liyanhui1998/go-onvif/xsd/onvif"
 )
@@ -43,7 +45,8 @@ type GetVideoSources struct {
 }
 
 type GetVideoSourcesResponse struct {
-	VideoSources onvif.VideoSource
+	XMLName      xml.Name            `xml:"GetVideoSourcesResponse"`
+	VideoSources []onvif.VideoSource `xml:"VideoSources"`
 }
 
 type GetAudioSources struct {
@@ -86,7 +89,7 @@ type GetProfiles struct {
 }
 
 type GetProfilesResponse struct {
-	Profiles []onvif.Profile
+	Profiles []onvif.Profile `xml:"Profiles"`
 }
 
 type AddVideoEncoderConfiguration struct {

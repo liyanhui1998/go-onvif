@@ -136,12 +136,12 @@ func NewDevice(params DeviceParams) (*Device, error) {
 	return dev, nil
 }
 
-func readResponse(resp *http.Response) string {
+func readResponse(resp *http.Response) []byte {
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
-	return string(b)
+	return b
 }
 
 //GetServices return available endpoints
@@ -206,33 +206,9 @@ func (dev Device) CallMethodInterface(method interface{}, outStruct interface{})
 	if err != nil {
 		return err
 	}
-	resString := readResponse(retResponse)
-	typ := reflect.TypeOf(outStruct)
-	val := reflect.ValueOf(outStruct)
-	if typ.Kind() == reflect.Ptr {
-		// 传入的interface是指针，需要.Elem()取得指针指向的value
-		typ = typ.Elem()
-		val = val.Elem()
-	} else {
-		return errors.New("outStruct must be ptr to struct")
-	}
-	//获取到该结构体有几个字段
-	num := val.NumField()
-	//遍历结构体的所有字段
-	for i := 0; i < num; i++ {
-		//获取到struct标签，需要通过reflect.Type来获取tag标签的值
-		value := val.Field(i)
-		tagVal := typ.Field(i).Tag.Get("xml")
-		if tagVal != "" {
-			if strings.Contains(resString, tagVal) {
-				startString := "<" + tagVal + ">"
-				endString := "</" + tagVal + ">"
-				subString := resString[strings.Index(resString, startString)+len(startString) : strings.Index(resString, endString)]
-				value.Set(reflect.ValueOf(subString))
-			}
-		}
-	}
-	return nil
+	retString := string(readResponse(retResponse))
+
+	return xml.Unmarshal([]byte(retString[strings.Index(retString, "<env:Body>")+10:strings.Index(retString, "</env:Body>")]), &outStruct)
 }
 
 //CallMethod functions call an method, defined <method> struct.

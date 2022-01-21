@@ -1,6 +1,8 @@
 package device
 
 import (
+	"encoding/xml"
+
 	"github.com/liyanhui1998/go-onvif/xsd"
 	"github.com/liyanhui1998/go-onvif/xsd/onvif"
 )
@@ -124,11 +126,12 @@ type GetDeviceInformation struct {
 }
 
 type GetDeviceInformationResponse struct {
-	Manufacturer    string `xml:"tds:Manufacturer"`
-	Model           string `xml:"tds:Model"`
-	FirmwareVersion string `xml:"tds:FirmwareVersion"`
-	SerialNumber    string `xml:"tds:SerialNumber"`
-	HardwareId      string `xml:"tds:HardwareId"`
+	XMLName         xml.Name `xml:"GetDeviceInformationResponse"`
+	Manufacturer    string   `xml:"Manufacturer"`
+	Model           string   `xml:"Model"`
+	FirmwareVersion string   `xml:"FirmwareVersion"`
+	SerialNumber    string   `xml:"SerialNumber"`
+	HardwareId      string   `xml:"HardwareId"`
 }
 
 type SetSystemDateAndTime struct {
@@ -469,7 +472,8 @@ type GetNetworkProtocols struct {
 }
 
 type GetNetworkProtocolsResponse struct {
-	NetworkProtocols onvif.NetworkProtocol
+	XMLName   xml.Name                `xml:"GetNetworkProtocolsResponse"`
+	Protocols []onvif.NetworkProtocol `xml:"NetworkProtocols"`
 }
 
 type SetNetworkProtocols struct {
