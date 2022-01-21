@@ -17,13 +17,8 @@ func readResponse(resp *http.Response) string {
 	}
 	return string(b)
 }
-func main() {
-	dev, _ := onvif.NewDevice(onvif.DeviceParams{Ipddr: "10.1.1.200", Username: "admin", Password: "123qweasdZXC"})
-	Response, _ := dev.CallMethod(device.GetDeviceInformation{})
-	log.Printf("%s\r\n", readResponse(Response))
-}
 
-func mainddd() {
+func main111() {
 	deviceList := onvif.GetAvailableDevicesAtSpecificEthernetInterface("以太网")
 	for _, value := range deviceList {
 		log.Printf("scan IP:%s\r\n", value.Params.Ipddr)
