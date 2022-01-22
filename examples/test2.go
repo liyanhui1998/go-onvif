@@ -15,7 +15,11 @@ func main222() {
 	/* 扫描局域网内摄像头 */
 	deviceList := onvif.GetAvailableDevicesAtSpecificEthernetInterface("以太网")
 	for _, value := range deviceList {
-		log.Printf("scan IP:%s\r\n", value.Params.Ipddr)
+		log.Printf("ip : %s\r\n", value.Params.Ipddr)
+		log.Printf("mac : %s\r\n", value.Params.MAC)
+		log.Printf("uuid : %s\r\n", value.Params.Uuid)
+		log.Printf("types : %s\r\n", value.Params.Types)
+		log.Printf("manufacturer : %s\r\n", value.Params.Manufacturer)
 	}
 
 	/* 连接设备 */

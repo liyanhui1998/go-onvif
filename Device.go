@@ -20,9 +20,14 @@ import (
 )
 
 type DeviceParams struct {
-	Ipddr    string
-	Username string
-	Password string
+	Ipddr        string
+	Username     string
+	Password     string
+	Uuid         string
+	Types        string
+	Manufacturer string
+	Model        string
+	MAC          string
 }
 
 type Device struct {
@@ -107,6 +112,29 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Devi
 				log.Printf("error:%s", err.Error())
 				continue
 			} else {
+				/* 获取uuid */
+				endpoints = doc.Root().FindElements("./Body/ProbeMatches/ProbeMatch/EndpointReference/Address")
+				dev.Params.Uuid = endpoints[0].Text()[strings.Index(endpoints[0].Text(), "uuid:")+5:]
+				/* 获取设备基本信息 */
+				endpoints = doc.Root().FindElements("./Body/ProbeMatches/ProbeMatch/Types")
+				dev.Params.Types = endpoints[0].Text()
+				endpoints = doc.Root().FindElements("./Body/ProbeMatches/ProbeMatch/Scopes")
+				pointsString := strings.Split(endpoints[0].Text(), " ")
+				for _, value := range pointsString {
+					if strings.Contains(value, "MAC") {
+						/* 获取设备mac */
+						macString := strings.Split(value, "/")
+						dev.Params.MAC = macString[len(macString)-1]
+					} else if strings.Contains(value, "hardware") {
+						/* 获取设备型号 */
+						hardString := strings.Split(value, "/")
+						dev.Params.Model = hardString[len(hardString)-1]
+					} else if strings.Contains(value, "name") {
+						/* 获取设备厂家 */
+						nameString := strings.Split(value, "/")
+						dev.Params.Manufacturer = nameString[len(nameString)-1][:strings.Index(nameString[len(nameString)-1], "%")]
+					}
+				}
 				nvtDevices = append(nvtDevices, *dev)
 
 			}
@@ -207,8 +235,11 @@ func (dev Device) CallMethodInterface(method interface{}, outStruct interface{})
 		return err
 	}
 	retString := string(readResponse(retResponse))
-
-	return xml.Unmarshal([]byte(retString[strings.Index(retString, "<env:Body>")+10:strings.Index(retString, "</env:Body>")]), &outStruct)
+	if strings.Index(retString, "<env:Body>") > 0 && strings.Index(retString, "</env:Body>") > 0 {
+		return xml.Unmarshal([]byte(retString[strings.Index(retString, "<env:Body>")+10:strings.Index(retString, "</env:Body>")]), &outStruct)
+	} else {
+		return errors.New("target returned an error")
+	}
 }
 
 //CallMethod functions call an method, defined <method> struct.
