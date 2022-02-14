@@ -76,6 +76,8 @@ func (msg *SoapMessage) AddBodyContent(element *etree.Element) {
 		log.Println(err.Error())
 	}
 	bodyTag := doc.Root().SelectElement("Body")
+	bodyTag.CreateAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+	bodyTag.CreateAttr("xmlns:xsd", "http://www.w3.org/2001/XMLSchema")
 	bodyTag.AddChild(element)
 	res, _ := doc.WriteToString()
 	*msg = SoapMessage(res)
@@ -165,10 +167,11 @@ func (msg *SoapMessage) AddRootNamespaces(namespaces map[string]string) {
 func buildSoapRoot() *etree.Document {
 	doc := etree.NewDocument()
 	doc.CreateProcInst("xml", `version="1.0" encoding="UTF-8"`)
-	env := doc.CreateElement("soap-env:Envelope")
-	env.CreateElement("soap-env:Header")
-	env.CreateElement("soap-env:Body")
-	env.CreateAttr("xmlns:soap-env", "http://www.w3.org/2003/05/soap-envelope")
+	env := doc.CreateElement("s:Envelope")
+	env.CreateElement("s:Header")
+	env.CreateElement("s:Body")
+	env.CreateAttr("xmlns:s", "http://www.w3.org/2003/05/soap-envelope")
+	env.CreateAttr("xmlns:a", "http://www.w3.org/2005/08/addressing")
 	env.CreateAttr("xmlns:soap-enc", "http://www.w3.org/2003/05/soap-encoding")
 	return doc
 }
@@ -178,7 +181,7 @@ func (msg *SoapMessage) AddWSSecurity(username, password string) {
 	/* Getting an WS-Security struct representation */
 	auth := NewSecurity(username, password)
 	/* Adding WS-Security namespaces to root element of SOAP message */
-	soapReq, err := xml.MarshalIndent(auth, "", "  ")
+	soapReq, err := xml.Marshal(auth)
 	if err != nil {
 		log.Panic(err)
 	}

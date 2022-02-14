@@ -30,9 +30,9 @@ type Subscribe struct { //http://docs.oasis-open.org/wsn/b-2.xsd
 
 //SubscribeResponse message for subscribe event topic
 type SubscribeResponse struct { //http://docs.oasis-open.org/wsn/b-2.xsd
-	ConsumerReference EndpointReferenceType `xml:"wsnt:ConsumerReference"`
-	CurrentTime       CurrentTime           `xml:"wsnt:CurrentTime"`
-	TerminationTime   TerminationTime       `xml:"wsnt:TerminationTime"`
+	ConsumerReference EndpointReferenceType `xml:"ConsumerReference"`
+	CurrentTime       CurrentTime           `xml:"CurrentTime"`
+	TerminationTime   TerminationTime       `xml:"TerminationTime"`
 }
 
 //Renew action for refresh event topic subscription
@@ -48,28 +48,27 @@ type RenewResponse struct { //http://docs.oasis-open.org/wsn/b-2.xsd
 
 //Unsubscribe action for Unsubscribe event topic
 type Unsubscribe struct { //http://docs.oasis-open.org/wsn/b-2.xsd
-	Any string
+	XMLName string `xml:"http://docs.oasis-open.org/wsn/b-2 Unsubscribe"`
 }
 
 //UnsubscribeResponse message for Unsubscribe event topic
 type UnsubscribeResponse struct { //http://docs.oasis-open.org/wsn/b-2.xsd
-	Any string
 }
 
 //CreatePullPointSubscription action
 //BUG(r) Bad AbsoluteOrRelativeTimeType type
 type CreatePullPointSubscription struct {
-	XMLName                string                     `xml:"tev:CreatePullPointSubscription"`
-	Filter                 FilterType                 `xml:"tev:Filter"`
-	InitialTerminationTime AbsoluteOrRelativeTimeType `xml:"wsnt:InitialTerminationTime"`
-	SubscriptionPolicy     SubscriptionPolicy         `xml:"wsnt:sSubscriptionPolicy"`
+	XMLName string `xml:"tev:CreatePullPointSubscription"`
+	// Filter                 FilterType                 `xml:"tev:Filter"`
+	// InitialTerminationTime AbsoluteOrRelativeTimeType `xml:"wsnt:InitialTerminationTime"`
+	// SubscriptionPolicy     SubscriptionPolicy         `xml:"wsnt:sSubscriptionPolicy"`
 }
 
 //CreatePullPointSubscriptionResponse action
 type CreatePullPointSubscriptionResponse struct {
 	SubscriptionReference EndpointReferenceType
-	CurrentTime           CurrentTime
-	TerminationTime       TerminationTime
+	CurrentTime           CurrentTime     `xml:"CurrentTime"`
+	TerminationTime       TerminationTime `xml:"TerminationTime"`
 }
 
 //GetEventProperties action
@@ -91,17 +90,17 @@ type GetEventPropertiesResponse struct {
 //Port type PullPointSubscription
 
 //PullMessages Action
-type PullMessages struct {
-	XMLName      string       `xml:"tev:PullMessages"`
-	Timeout      xsd.Duration `xml:"tev:Timeout"`
-	MessageLimit xsd.Int      `xml:"tev:MessageLimit"`
+type PullMessages struct { //xmlns="http://www.onvif.org/ver10/events/wsdl"
+	XMLName      string `xml:"tev:PullMessages"`
+	Timeout      string `xml:"tev:Timeout"`
+	MessageLimit int    `xml:"tev:MessageLimit"`
 }
 
 //PullMessagesResponse response type
 type PullMessagesResponse struct {
-	CurrentTime         CurrentTime
-	TerminationTime     TerminationTime
-	NotificationMessage NotificationMessage
+	CurrentTime         CurrentTime         `xml:"CurrentTime"`
+	TerminationTime     TerminationTime     `xml:"TerminationTime"`
+	NotificationMessage NotificationMessage `xml:"NotificationMessage"`
 }
 
 //PullMessagesFaultResponse response type

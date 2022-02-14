@@ -24,7 +24,6 @@ import (
 
 type ContentType string // minLength value="3"
 type DNSName xsd.Token
-
 type DeviceEntity struct {
 	Token ReferenceToken `xml:"token,attr"`
 }
@@ -1127,21 +1126,6 @@ type OnvifVersion struct {
 	Minor int
 }
 
-type SetDateTimeType xsd.String
-
-type TimeZone struct {
-	TZ xsd.Token `xml:"onvif:TZ"`
-}
-
-type SystemDateTime struct {
-	DateTimeType    SetDateTimeType
-	DaylightSavings xsd.Boolean
-	TimeZone        TimeZone
-	UTCDateTime     xsd.DateTime
-	LocalDateTime   xsd.DateTime
-	Extension       SystemDateTimeExtension
-}
-
 type SystemDateTimeExtension xsd.AnyType
 
 type FactoryDefaultType xsd.String
@@ -1459,22 +1443,20 @@ type DynamicDNSType xsd.String
 type DynamicDNSInformationExtension xsd.AnyType
 
 type NetworkInterface struct {
-	DeviceEntity
-	Enabled   xsd.Boolean
-	Info      NetworkInterfaceInfo
-	Link      NetworkInterfaceLink
-	IPv4      IPv4NetworkInterface
-	IPv6      IPv6NetworkInterface
-	Extension NetworkInterfaceExtension
+	DeviceEntity `xml:"DeviceEntity"`
+	Enabled      bool                      `xml:"Enabled"`
+	Info         NetworkInterfaceInfo      `xml:"Info"`
+	Link         NetworkInterfaceLink      `xml:"Link"`
+	IPv4         IPv4NetworkInterface      `xml:"IPv4"`
+	IPv6         IPv6NetworkInterface      `xml:"IPv6"`
+	Extension    NetworkInterfaceExtension `xml:"Extension"`
 }
 
 type NetworkInterfaceInfo struct {
-	Name      xsd.String
-	HwAddress HwAddress
-	MTU       xsd.Int
+	Name      string `xml:"Name"`
+	HwAddress string `xml:"HwAddress"`
+	MTU       int    `xml:"MTU"`
 }
-
-type HwAddress xsd.Token
 
 type NetworkInterfaceLink struct {
 	AdminSettings NetworkInterfaceConnectionSetting
@@ -1485,29 +1467,24 @@ type NetworkInterfaceLink struct {
 type IANA_IfTypes xsd.Int
 
 type NetworkInterfaceConnectionSetting struct {
-	AutoNegotiation xsd.Boolean `xml:"onvif:AutoNegotiation"`
-	Speed           xsd.Int     `xml:"onvif:Speed"`
-	Duplex          Duplex      `xml:"onvif:Duplex"`
+	AutoNegotiation bool   `xml:"AutoNegotiation"`
+	Speed           int    `xml:"Speed"`
+	Duplex          string `xml:"Duplex"`
 }
-
-//TODO: enum
-type Duplex xsd.String
 
 type NetworkInterfaceExtension struct {
-	InterfaceType IANA_IfTypes
-	Dot3          Dot3Configuration
-	Dot11         Dot11Configuration
-	Extension     NetworkInterfaceExtension2
+	InterfaceType int                `xml:"InterfaceType"`
+	Dot3          string             `xml:"Dot3"`
+	Dot11         Dot11Configuration `xml:"Dot11"`
+	Extension     string             `xml:"Extension"`
 }
 
-type NetworkInterfaceExtension2 xsd.AnyType
-
 type Dot11Configuration struct {
-	SSID     Dot11SSIDType                  `xml:"onvif:SSID"`
-	Mode     Dot11StationMode               `xml:"onvif:Mode"`
-	Alias    Name                           `xml:"onvif:Alias"`
-	Priority NetworkInterfaceConfigPriority `xml:"onvif:Priority"`
-	Security Dot11SecurityConfiguration     `xml:"onvif:Security"`
+	SSID     Dot11SSIDType                  `xml:"SSID"`
+	Mode     Dot11StationMode               `xml:"Mode"`
+	Alias    Name                           `xml:"Alias"`
+	Priority NetworkInterfaceConfigPriority `xml:"Priority"`
+	Security Dot11SecurityConfiguration     `xml:"Security"`
 }
 
 type Dot11SecurityConfiguration struct {
@@ -1550,46 +1527,41 @@ type Dot11SSIDType xsd.HexBinary
 type Dot3Configuration xsd.String
 
 type IPv6NetworkInterface struct {
-	Enabled xsd.Boolean
-	Config  IPv6Configuration
+	Enabled bool              `xml:"Enabled"`
+	Config  IPv6Configuration `xml:"Config"`
 }
 
 type IPv6Configuration struct {
-	AcceptRouterAdvert xsd.Boolean
-	DHCP               IPv6DHCPConfiguration
-	Manual             PrefixedIPv6Address
-	LinkLocal          PrefixedIPv6Address
-	FromDHCP           PrefixedIPv6Address
-	FromRA             PrefixedIPv6Address
-	Extension          IPv6ConfigurationExtension
+	AcceptRouterAdvert bool                `xml:"AcceptRouterAdvert"`
+	DHCP               string              `xml:"DHCP"`
+	Manual             PrefixedIPv6Address `xml:"Manual"`
+	LinkLocal          PrefixedIPv6Address `xml:"LinkLocal"`
+	FromDHCP           PrefixedIPv6Address `xml:"FromDHCP"`
+	FromRA             PrefixedIPv6Address `xml:"FromRA"`
+	Extension          string              `xml:"Extension"`
 }
-
-type IPv6ConfigurationExtension xsd.AnyType
 
 type PrefixedIPv6Address struct {
-	Address      IPv6Address `xml:"onvif:Address"`
-	PrefixLength xsd.Int     `xml:"onvif:PrefixLength"`
+	Address      IPv6Address `xml:"Address"`
+	PrefixLength xsd.Int     `xml:"PrefixLength"`
 }
 
-//TODO: enumeration
-type IPv6DHCPConfiguration xsd.String
-
 type IPv4NetworkInterface struct {
-	Enabled xsd.Boolean
-	Config  IPv4Configuration
+	Enabled bool              `xml:"Enabled"`
+	Config  IPv4Configuration `xml:"Config"`
 }
 
 type IPv4Configuration struct {
 	Manual    PrefixedIPv4Address
 	LinkLocal PrefixedIPv4Address
 	FromDHCP  PrefixedIPv4Address
-	DHCP      xsd.Boolean
+	DHCP      bool
 }
 
 //optional, unbounded
 type PrefixedIPv4Address struct {
-	Address      IPv4Address `xml:"onvif:Address"`
-	PrefixLength xsd.Int     `xml:"onvif:PrefixLength"`
+	Address      IPv4Address `xml:"Address"`
+	PrefixLength xsd.Int     `xml:"PrefixLength"`
 }
 
 type NetworkInterfaceSetConfiguration struct {
@@ -1610,10 +1582,10 @@ type NetworkInterfaceSetConfigurationExtension struct {
 type NetworkInterfaceSetConfigurationExtension2 xsd.AnyType
 
 type IPv6NetworkInterfaceSetConfiguration struct {
-	Enabled            xsd.Boolean           `xml:"onvif:Enabled"`
-	AcceptRouterAdvert xsd.Boolean           `xml:"onvif:AcceptRouterAdvert"`
-	Manual             PrefixedIPv6Address   `xml:"onvif:Manual"`
-	DHCP               IPv6DHCPConfiguration `xml:"onvif:DHCP"`
+	Enabled            xsd.Boolean         `xml:"onvif:Enabled"`
+	AcceptRouterAdvert xsd.Boolean         `xml:"onvif:AcceptRouterAdvert"`
+	Manual             PrefixedIPv6Address `xml:"onvif:Manual"`
+	DHCP               string              `xml:"onvif:DHCP"`
 }
 
 type IPv4NetworkInterfaceSetConfiguration struct {
@@ -1851,21 +1823,4 @@ type RelativeFocus struct {
 type AbsoluteFocus struct {
 	Position xsd.Float `xml:"onvif:Position"`
 	Speed    xsd.Float `xml:"onvif:Speed"`
-}
-
-type DateTime struct {
-	Time Time `xml:"onvif:Time"`
-	Date Date `xml:"onvif:Date"`
-}
-
-type Time struct {
-	Hour   xsd.Int `xml:"onvif:Hour"`
-	Minute xsd.Int `xml:"onvif:Minute"`
-	Second xsd.Int `xml:"onvif:Second"`
-}
-
-type Date struct {
-	Year  xsd.Int `xml:"onvif:Year"`
-	Month xsd.Int `xml:"onvif:Month"`
-	Day   xsd.Int `xml:"onvif:Day"`
 }

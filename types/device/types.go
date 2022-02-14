@@ -135,11 +135,11 @@ type GetDeviceInformationResponse struct {
 }
 
 type SetSystemDateAndTime struct {
-	XMLName         string                `xml:"tds:SetSystemDateAndTime"`
-	DateTimeType    onvif.SetDateTimeType `xml:"tds:DateTimeType"`
-	DaylightSavings xsd.Boolean           `xml:"tds:DaylightSavings"`
-	TimeZone        onvif.TimeZone        `xml:"tds:TimeZone"`
-	UTCDateTime     onvif.DateTime        `xml:"tds:UTCDateTime"`
+	XMLName         string      `xml:"tds:SetSystemDateAndTime"`
+	DateTimeType    string      `xml:"tds:DateTimeType"`
+	DaylightSavings xsd.Boolean `xml:"tds:DaylightSavings"`
+	TimeZone        TimeZone    `xml:"tds:TimeZone"`
+	UTCDateTime     DateTime    `xml:"tds:UTCDateTime"`
 }
 
 type SetSystemDateAndTimeResponse struct {
@@ -150,7 +150,7 @@ type GetSystemDateAndTime struct {
 }
 
 type GetSystemDateAndTimeResponse struct {
-	SystemDateAndTime onvif.SystemDateTime
+	SystemDateAndTime SystemDateTime
 }
 
 type SetSystemFactoryDefault struct {
@@ -175,7 +175,7 @@ type SystemReboot struct {
 }
 
 type SystemRebootResponse struct {
-	Message string
+	Message string `xml:"Message"`
 }
 
 //TODO: one or more repetitions
@@ -885,4 +885,55 @@ type DeleteGeoLocation struct {
 }
 
 type DeleteGeoLocationResponse struct {
+}
+
+type FaultResponse struct {
+	XMLName string           `xml:"Fault"`
+	Code    FaultCodeLable   `xml:"Code"`
+	Reason  FaultReasonLable `xml:"Reason"`
+}
+
+type FaultCodeLable struct {
+	Value   string            `xml:"Value"`
+	Subcode FaultSubcodeLable `xml:"Subcode"`
+}
+
+type FaultSubcodeLable struct {
+	Value string `xml:"Value"`
+}
+
+type FaultReasonLable struct {
+	Text string `xml:"Text"`
+}
+
+/*  */
+
+type DateTime struct {
+	Time Time `xml:"onvif:Time"`
+	Date Date `xml:"onvif:Date"`
+}
+
+type Time struct {
+	Hour   int `xml:"onvif:Hour"`
+	Minute int `xml:"onvif:Minute"`
+	Second int `xml:"onvif:Second"`
+}
+
+type Date struct {
+	Year  int `xml:"onvif:Year"`
+	Month int `xml:"onvif:Month"`
+	Day   int `xml:"onvif:Day"`
+}
+
+type TimeZone struct {
+	TZ string `xml:"onvif:TZ"`
+}
+
+type SystemDateTime struct {
+	DateTimeType    string
+	DaylightSavings bool
+	TimeZone        TimeZone
+	UTCDateTime     DateTime
+	LocalDateTime   DateTime
+	Extension       onvif.StreamSetup
 }

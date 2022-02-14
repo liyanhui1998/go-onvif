@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/liyanhui1998/go-onvif/soap"
 	"github.com/liyanhui1998/go-onvif/types/device"
@@ -82,12 +84,30 @@ var Xlmns = map[string]string{
 	"wsaw":    "http://www.w3.org/2006/05/addressing/wsdl",
 }
 
+/*
+	初始化函数
+*/
+func init() {
+	/* 设置打印格式信息 */
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+}
+
+/*
+	说明:
+		查找指定网卡支持onvif协议的NVT设备
+	参数:
+		interfaceName 参数为指定 网卡名称
+	返回:
+		[]Device 类型 结构体数组
+		获取设备信息可遍历结构体数组中Params结构体
+*/
 func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Device {
 	/* Call an ws-discovery Probe Message to Discover NVT type Devices */
-	devices := SendProbe(interfaceName, nil, []string{"dn:" + NVT.String()}, map[string]string{"dn": "http://www.onvif.org/ver10/network/wsdl"})
+	devices := SendProbe(interfaceName, nil, []string{"tds:" + NVT.String()}, map[string]string{"tds": "http://www.onvif.org/ver10/network/wsdl"})
+	/* 遍历处理返回的设备数据 */
 	nvtDevices := make([]Device, 0)
-
 	for _, j := range devices {
+		log.Printf("%v", j)
 		doc := etree.NewDocument()
 		if err := doc.ReadFromString(j); err != nil {
 			log.Printf("error:%s", err.Error())
@@ -100,7 +120,7 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Devi
 			c := 0
 			for c = 0; c < len(nvtDevices); c++ {
 				if nvtDevices[c].Params.Ipddr == xaddr {
-					fmt.Println(nvtDevices[c].Params.Ipddr, "==", xaddr)
+					log.Printf(nvtDevices[c].Params.Ipddr, "==", xaddr)
 					break
 				}
 			}
@@ -130,13 +150,12 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Devi
 						hardString := strings.Split(value, "/")
 						dev.Params.Model = hardString[len(hardString)-1]
 					} else if strings.Contains(value, "name") {
-						/* 获取设备厂家 */
+						/* 获取设备名称 */
 						nameString := strings.Split(value, "/")
-						dev.Params.Manufacturer = nameString[len(nameString)-1][:strings.Index(nameString[len(nameString)-1], "%")]
+						dev.Params.Manufacturer = nameString[len(nameString)-1]
 					}
 				}
 				nvtDevices = append(nvtDevices, *dev)
-
 			}
 		}
 	}
@@ -152,6 +171,8 @@ func NewDevice(params DeviceParams) (*Device, error) {
 
 	if dev.httpClient == nil {
 		dev.httpClient = new(http.Client)
+		/* 设置默认10s超时 */
+		dev.httpClient.Timeout = time.Second * 10
 	}
 
 	getCapabilities := device.GetCapabilities{Category: "All"}
@@ -222,23 +243,81 @@ func (dev Device) getEndpoint(endpoint string) (string, error) {
 	return endpointURL, errors.New("target endpoint service not found")
 }
 
-func (dev Device) CallMethodInterface(method interface{}, outStruct interface{}) error {
+/*
+	explain: 调用设备方法
+		CallMethod functions call an method, defined <method> struct.
+		You should use Authenticate method to call authorized requests.
+		Returns the corresponding struct
+	parameters: 带入需要调用方法的结构体,带入返回对应数据结构体(需提前声明,这里去地址‘&’),若需要重定向url信息则填入指定url
+		method: call function struct
+		response: return function response struct(take the address,Need to bring '&')
+		redirect url: event method uses a redirect URL
+	return: 返回调用设备方法失败信息
+		error information
+*/
+func (dev Device) CallMethodInterface(method interface{}, response interface{}, RedirectURL string) error {
+	/* 通过反射获取带入的结构体名称 */
+	methodTypeName := reflect.TypeOf(method).String()
+	responseTypeName := reflect.TypeOf(response).String()
+	methodTypeName = methodTypeName[strings.Index(methodTypeName, ".")+1:]
+	responseTypeName = responseTypeName[strings.Index(responseTypeName, ".")+1:]
+	/* 判断调用的方法结构体是否和带入返回的结构体是一组 若不是则直接返回 */
+	if fmt.Sprintf("%sResponse", methodTypeName) != responseTypeName {
+		return errors.New("calls or returns struct parameter errors")
+	}
+	/* 获取调用方法的包名称 */
 	pkgPath := strings.Split(reflect.TypeOf(method).PkgPath(), "/")
 	pkg := strings.ToLower(pkgPath[len(pkgPath)-1])
-
+	/* 获取调用方法的包对应的server地址 */
 	endpoint, err := dev.getEndpoint(pkg)
 	if err != nil {
 		return err
+	}
+	if RedirectURL != "" {
+		endpoint = RedirectURL
 	}
 	retResponse, err := dev.callMethodDo(endpoint, method)
 	if err != nil {
 		return err
 	}
+	/* 读取http返回数据 */
 	retString := string(readResponse(retResponse))
-	if strings.Index(retString, "<env:Body>") > 0 && strings.Index(retString, "</env:Body>") > 0 {
-		return xml.Unmarshal([]byte(retString[strings.Index(retString, "<env:Body>")+10:strings.Index(retString, "</env:Body>")]), &outStruct)
+	/* 定义处理解析的Body命名空间 */
+	spaces := []string{"env", "s"}
+	spacesIndex := -1
+	/* 遍历查找设备Body使用的命名空间 */
+	for index, value := range spaces {
+		if strings.Index(retString, fmt.Sprintf("<%s:Body>", value)) > 0 && strings.Index(retString, fmt.Sprintf("</%s:Body>", value)) > 0 {
+			spacesIndex = index
+		}
+	}
+	/* 判断和提取选中的Body数据 */
+	if spacesIndex >= 0 {
+		startBodyLabel := fmt.Sprintf("<%s:Body>", spaces[spacesIndex])
+		endBodyLabel := fmt.Sprintf("</%s:Body>", spaces[spacesIndex])
+		bodyMsg := retString[strings.Index(retString, startBodyLabel)+len(startBodyLabel) : strings.Index(retString, endBodyLabel)]
+		/* 检测设备是否发送fault信息 */
+		if err := checkFaultCode(bodyMsg); err != nil {
+			return err
+		}
+		/* 解析body中的xml信息 */
+		if err := xml.Unmarshal([]byte(bodyMsg), &response); err != nil {
+			return err
+		} else {
+			/* 成功返回 */
+			return nil
+		}
+	}
+	return errors.New("target returned an error")
+}
+
+func checkFaultCode(msg string) error {
+	fault := device.FaultResponse{}
+	xml.Unmarshal([]byte(msg), &fault)
+	if fault.Reason.Text != "" {
+		return errors.New(fault.Reason.Text)
 	} else {
-		return errors.New("target returned an error")
+		return nil
 	}
 }
 
@@ -261,7 +340,6 @@ func (dev Device) callMethodDo(endpoint string, method interface{}) (*http.Respo
 	if err != nil {
 		return nil, err
 	}
-
 	soap, err := dev.buildMethodSOAP(string(output))
 	if err != nil {
 		return nil, err
@@ -292,6 +370,29 @@ func SendSoap(httpClient *http.Client, endpoint, message string) (*http.Response
 	if err != nil {
 		return resp, err
 	}
-
 	return resp, nil
+}
+
+/*
+	说明:
+		摄像头http接口获取抓拍图像信息
+	返回:
+		二进制数据(图像)
+*/
+func DowloadHttpSnapshotImageNoAuthorization(url string) ([]byte, error) {
+	httpClient := &http.Client{}
+	/* 生成需要访问的http.Request信息 */
+	if reqest, err := http.NewRequest("GET", url, nil); err == nil {
+		if response, err := httpClient.Do(reqest); err == nil {
+			defer response.Body.Close()
+			if imageBytes, err := io.ReadAll(response.Body); err == nil {
+				return imageBytes, nil
+			} else {
+				return nil, err
+			}
+		}
+	} else {
+		return nil, err
+	}
+	return nil, errors.New("unknown error")
 }
