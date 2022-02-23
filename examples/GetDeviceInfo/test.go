@@ -1,3 +1,12 @@
+/*
+ * @Author: YanHui Li
+ * @Date: 2022-02-08 09:37:30
+ * @LastEditTime: 2022-02-23 17:03:06
+ * @LastEditors: YanHui Li
+ * @Description:
+ * @FilePath: \go-onvif\examples\GetDeviceInfo\test.go
+ *
+ */
 package main
 
 import (
@@ -7,13 +16,12 @@ import (
 
 	"github.com/liyanhui1998/go-onvif"
 	"github.com/liyanhui1998/go-onvif/types/device"
-	"github.com/liyanhui1998/go-onvif/types/hikvision"
 	"github.com/liyanhui1998/go-onvif/types/media"
 )
 
 func main() {
 	/* 连接设备 */
-	dev, _ := onvif.NewDevice(onvif.DeviceParams{Ipddr: "10.1.1.200", Username: "admin", Password: "123qweasdZXC"})
+	dev, _ := onvif.NewDevice(onvif.DeviceParams{Ipddr: "10.1.1.210", Username: "admin", Password: "123qweasdZXC"})
 
 	/* 获取能力集合 */
 	retServices := dev.GetServices()
@@ -27,7 +35,7 @@ func main() {
 	jsonString, _ := json.Marshal(deviceInfo)
 	log.Printf("%s\r\n", jsonString)
 
-	/* 获取设备网卡信息 */
+	// /* 获取设备网卡信息 */
 	deviceInterfaces := device.GetNetworkInterfacesResponse{}
 	dev.CallMethodInterface(device.GetNetworkInterfaces{}, &deviceInterfaces, "")
 	jsonString, _ = json.Marshal(deviceInterfaces)
@@ -51,33 +59,27 @@ func main() {
 	jsonString, _ = json.Marshal(mediaProfiles)
 	log.Printf("%s\r\n", jsonString)
 
-	/* 获取摄像头抓拍地址 */
+	// /* 获取摄像头抓拍地址 */
 	mediaSnapshot := media.GetSnapshotUriResponse{}
 	dev.CallMethodInterface(media.GetSnapshotUri{ProfileToken: mediaProfiles.Profiles[0].Token}, &mediaSnapshot, "")
 	jsonString, _ = json.Marshal(mediaSnapshot)
 	log.Printf("%s\r\n", jsonString)
-
 	/* 获取图片 */
-	if deviceInfo.Manufacturer == "HIKVISION" {
-		ddd, _ := hikvision.DowloadHttpSnapshotImage(string(mediaSnapshot.MediaUri.Uri), "admin", "123qweasdZXC")
-		f, err := os.Create("123123.jpg")
-		if err != nil {
-			panic(err)
-		}
-		f.Write(ddd)
-		f.Close()
-	} else {
-		ddd, _ := onvif.DowloadHttpSnapshotImageNoAuthorization(string(mediaSnapshot.MediaUri.Uri))
-		f, err := os.Create("123123.jpg")
-		if err != nil {
-			panic(err)
-		}
-		f.Write(ddd)
-		f.Close()
+	ddd, _ := onvif.HttpDigestAuthGetSnapshotImage(string(mediaSnapshot.MediaUri.Uri), "admin", "123qweasdZXC")
+	f, err := os.Create("123123.jpg")
+	if err != nil {
+		panic(err)
 	}
+	f.Write(ddd)
+	f.Close()
+
 	/* 获取设备RTSP直播地址 */
 	mediaRTSP := media.GetStreamUriResponse{}
-	dev.CallMethodInterface(media.GetStreamUri{ProfileToken: mediaProfiles.Profiles[0].Token}, &mediaRTSP, "")
+	/* 大华摄像头获取视频流地址需要指定rstp信息 */
+	if err := dev.CallMethodInterface(media.GetStreamUri{ProfileToken: mediaProfiles.Profiles[0].Token,
+		StreamSetup: device.StreamSetup{Stream: "RTP-Unicast", Transport: device.Transport{Protocol: "UDP"}}}, &mediaRTSP, ""); err != nil {
+		log.Fatalln(err)
+	}
 	jsonString, _ = json.Marshal(mediaRTSP)
 	log.Printf("%s\r\n", jsonString)
 }

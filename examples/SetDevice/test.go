@@ -1,3 +1,12 @@
+/*
+ * @Author: YanHui Li
+ * @Date: 2022-02-10 15:40:55
+ * @LastEditTime: 2022-02-15 15:49:33
+ * @LastEditors: YanHui Li
+ * @Description:
+ * @FilePath: \go-onvif\examples\SetDevice\test.go
+ *
+ */
 package main
 
 import (

@@ -1,3 +1,21 @@
+/*
+ * @Author: YanHui Li
+ * @Date: 2022-01-04 16:17:53
+ * @LastEditTime: 2022-02-23 17:23:18
+ * @LastEditors: YanHui Li
+ * @Description:
+ * @FilePath: \go-onvif\Device.go
+ *
+ */
+/*
+ * @Author: YanHui Li
+ * @Date: 2022-01-04 16:17:53
+ * @LastEditTime: 2022-02-23 15:48:52
+ * @LastEditors: YanHui Li
+ * @Description:
+ * @FilePath: \go-onvif\Device.go
+ *
+ */
 package onvif
 
 import (
@@ -5,7 +23,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,14 +39,14 @@ import (
 )
 
 type DeviceParams struct {
-	Ipddr        string
-	Username     string
-	Password     string
-	Uuid         string
-	Types        string
-	Manufacturer string
-	Model        string
-	MAC          string
+	Ipddr    string
+	Username string
+	Password string
+	Uuid     string
+	Types    string
+	Name     string
+	Model    string
+	MAC      string
 }
 
 type Device struct {
@@ -84,30 +101,19 @@ var Xlmns = map[string]string{
 	"wsaw":    "http://www.w3.org/2006/05/addressing/wsdl",
 }
 
-/*
-	初始化函数
-*/
+/* 初始化函数 */
 func init() {
 	/* 设置打印格式信息 */
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 }
 
-/*
-	说明:
-		查找指定网卡支持onvif协议的NVT设备
-	参数:
-		interfaceName 参数为指定 网卡名称
-	返回:
-		[]Device 类型 结构体数组
-		获取设备信息可遍历结构体数组中Params结构体
-*/
+/* 查找指定网卡支持onvif协议的NVT设备 */
 func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Device {
 	/* Call an ws-discovery Probe Message to Discover NVT type Devices */
-	devices := SendProbe(interfaceName, nil, []string{"tds:" + NVT.String()}, map[string]string{"tds": "http://www.onvif.org/ver10/network/wsdl"})
+	devices := soap.SendProbe(interfaceName, nil, []string{"tds:" + NVT.String()}, map[string]string{"tds": "http://www.onvif.org/ver10/network/wsdl"})
 	/* 遍历处理返回的设备数据 */
 	nvtDevices := make([]Device, 0)
 	for _, j := range devices {
-		log.Printf("%v", j)
 		doc := etree.NewDocument()
 		if err := doc.ReadFromString(j); err != nil {
 			log.Printf("error:%s", err.Error())
@@ -152,7 +158,7 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Devi
 					} else if strings.Contains(value, "name") {
 						/* 获取设备名称 */
 						nameString := strings.Split(value, "/")
-						dev.Params.Manufacturer = nameString[len(nameString)-1]
+						dev.Params.Name = nameString[len(nameString)-1]
 					}
 				}
 				nvtDevices = append(nvtDevices, *dev)
@@ -243,18 +249,17 @@ func (dev Device) getEndpoint(endpoint string) (string, error) {
 	return endpointURL, errors.New("target endpoint service not found")
 }
 
-/*
-	explain: 调用设备方法
-		CallMethod functions call an method, defined <method> struct.
+/**
+ * @description:
+ 		CallMethod functions call an method, defined <method> struct.
 		You should use Authenticate method to call authorized requests.
 		Returns the corresponding struct
-	parameters: 带入需要调用方法的结构体,带入返回对应数据结构体(需提前声明,这里去地址‘&’),若需要重定向url信息则填入指定url
-		method: call function struct
-		response: return function response struct(take the address,Need to bring '&')
-		redirect url: event method uses a redirect URL
-	return: 返回调用设备方法失败信息
-		error information
+ * @param {interface{}} method call function struct
+ * @param {interface{}} response return function response struct(take the address,Need to bring '&')
+ * @param {string} RedirectURL event method uses a redirect URL
+ * @return {error} error information
 */
+//调用设备方法
 func (dev Device) CallMethodInterface(method interface{}, response interface{}, RedirectURL string) error {
 	/* 通过反射获取带入的结构体名称 */
 	methodTypeName := reflect.TypeOf(method).String()
@@ -311,6 +316,7 @@ func (dev Device) CallMethodInterface(method interface{}, response interface{}, 
 	return errors.New("target returned an error")
 }
 
+//检查错误状态码
 func checkFaultCode(msg string) error {
 	fault := device.FaultResponse{}
 	xml.Unmarshal([]byte(msg), &fault)
@@ -371,28 +377,4 @@ func SendSoap(httpClient *http.Client, endpoint, message string) (*http.Response
 		return resp, err
 	}
 	return resp, nil
-}
-
-/*
-	说明:
-		摄像头http接口获取抓拍图像信息
-	返回:
-		二进制数据(图像)
-*/
-func DowloadHttpSnapshotImageNoAuthorization(url string) ([]byte, error) {
-	httpClient := &http.Client{}
-	/* 生成需要访问的http.Request信息 */
-	if reqest, err := http.NewRequest("GET", url, nil); err == nil {
-		if response, err := httpClient.Do(reqest); err == nil {
-			defer response.Body.Close()
-			if imageBytes, err := io.ReadAll(response.Body); err == nil {
-				return imageBytes, nil
-			} else {
-				return nil, err
-			}
-		}
-	} else {
-		return nil, err
-	}
-	return nil, errors.New("unknown error")
 }

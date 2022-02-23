@@ -3,6 +3,7 @@ package media
 import (
 	"encoding/xml"
 
+	"github.com/liyanhui1998/go-onvif/types/device"
 	"github.com/liyanhui1998/go-onvif/xsd"
 	"github.com/liyanhui1998/go-onvif/xsd/onvif"
 )
@@ -617,7 +618,7 @@ type GetGuaranteedNumberOfVideoEncoderInstancesResponse struct {
 
 type GetStreamUri struct {
 	XMLName      string               `xml:"trt:GetStreamUri"`
-	StreamSetup  onvif.StreamSetup    `xml:"trt:StreamSetup"`
+	StreamSetup  device.StreamSetup   `xml:"trt:StreamSetup"`
 	ProfileToken onvif.ReferenceToken `xml:"trt:ProfileToken"`
 }
 

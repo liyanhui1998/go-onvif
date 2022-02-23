@@ -805,21 +805,6 @@ type G726DecOptions struct {
 
 type AudioDecoderConfigurationOptionsExtension xsd.AnyType
 
-type StreamSetup struct {
-	Stream    StreamType `xml:"onvif:Stream"`
-	Transport Transport  `xml:"onvif:Transport"`
-}
-
-type StreamType xsd.String
-
-type Transport struct {
-	Protocol TransportProtocol `xml:"onvif:Protocol"`
-	Tunnel   *Transport        `xml:"onvif:Tunnel"`
-}
-
-//enum
-type TransportProtocol xsd.String
-
 type MediaUri struct {
 	Uri                 xsd.AnyURI `xml:"Uri"`
 	InvalidAfterConnect bool       `xml:"InvalidAfterConnect"`

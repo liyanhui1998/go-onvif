@@ -4,6 +4,8 @@ github.com/elgs/gostrgen v0.0.0-20161222160715-9d61ae07eeae h1:3KvK2DmA7TxQ6PZ2f
 github.com/elgs/gostrgen v0.0.0-20161222160715-9d61ae07eeae/go.mod h1:wruC5r2gHdr/JIUs5Rr1V45YtsAzKXZxAnn/5rPC97g=
 github.com/gofrs/uuid v4.2.0+incompatible h1:yyYWMnhkhrKwwr8gAOcOCYxOOscHgDS9yZgBrnJfGa0=
 github.com/gofrs/uuid v4.2.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
+github.com/xinsnake/go-http-digest-auth-client v0.6.0 h1:nrYFWDrB2F7VwYlNravXZS0nOtg9axlATH3Jns55/F0=
+github.com/xinsnake/go-http-digest-auth-client v0.6.0/go.mod h1:QK1t1v7ylyGb363vGWu+6Irh7gyFj+N7+UZzM0L6g8I=
 golang.org/x/net v0.0.0-20211216030914-fe4d6282115f h1:hEYJvxw1lSnWIl8X9ofsYMklzaDs90JI2az5YMd4fPM=
 golang.org/x/net v0.0.0-20211216030914-fe4d6282115f/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da h1:b3NXsE2LusjYGGjL5bxEVZZORm/YEFFrWFjR8eFrw/c=

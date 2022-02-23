@@ -935,5 +935,14 @@ type SystemDateTime struct {
 	TimeZone        TimeZone
 	UTCDateTime     DateTime
 	LocalDateTime   DateTime
-	Extension       onvif.StreamSetup
+	Extension       StreamSetup
+}
+
+type StreamSetup struct {
+	Stream    string    `xml:"http://www.onvif.org/ver10/schema Stream"`
+	Transport Transport `xml:"http://www.onvif.org/ver10/schema Transport"`
+}
+type Transport struct {
+	Protocol string     `xml:"Protocol"`
+	Tunnel   *Transport `xml:"Tunnel"`
 }
