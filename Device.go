@@ -1,16 +1,7 @@
 /*
  * @Author: YanHui Li
  * @Date: 2022-01-04 16:17:53
- * @LastEditTime: 2022-02-23 17:23:18
- * @LastEditors: YanHui Li
- * @Description:
- * @FilePath: \go-onvif\Device.go
- *
- */
-/*
- * @Author: YanHui Li
- * @Date: 2022-01-04 16:17:53
- * @LastEditTime: 2022-02-23 15:48:52
+ * @LastEditTime: 2022-02-24 16:55:34
  * @LastEditors: YanHui Li
  * @Description:
  * @FilePath: \go-onvif\Device.go
@@ -38,6 +29,7 @@ import (
 	"github.com/beevik/etree"
 )
 
+/* 定义设备参数结构体 */
 type DeviceParams struct {
 	Ipddr    string
 	Username string
@@ -49,6 +41,7 @@ type DeviceParams struct {
 	MAC      string
 }
 
+/* 定义设备控制句柄结构体 */
 type Device struct {
 	Params     DeviceParams
 	httpClient *http.Client
@@ -66,6 +59,7 @@ const (
 	NVT
 )
 
+/* 定义DeviceType中String方法,用于索引转字符串信息 */
 func (devType DeviceType) String() string {
 	stringRepresentation := []string{
 		"NetworkVideoDisplay",
@@ -119,7 +113,7 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Devi
 			log.Printf("error:%s", err.Error())
 			return nil
 		}
-
+		/* 查找ws-discovery中回复的设备地址信息 */
 		endpoints := doc.Root().FindElements("./Body/ProbeMatches/ProbeMatch/XAddrs")
 		for _, xaddr := range endpoints {
 			xaddr := strings.Split(strings.Split(xaddr.Text(), " ")[0], "/")[2]
@@ -133,6 +127,7 @@ func GetAvailableDevicesAtSpecificEthernetInterface(interfaceName string) []Devi
 			if c < len(nvtDevices) {
 				continue
 			}
+			/* 与设备建立连接获取服务地址信息 */
 			dev, err := NewDevice(DeviceParams{Ipddr: strings.Split(xaddr, " ")[0]})
 			if err != nil {
 				log.Printf("error:%s", err.Error())
@@ -180,13 +175,14 @@ func NewDevice(params DeviceParams) (*Device, error) {
 		/* 设置默认10s超时 */
 		dev.httpClient.Timeout = time.Second * 10
 	}
-
+	/* 调用设备GetCapabilities方法获取能力合集 */
 	getCapabilities := device.GetCapabilities{Category: "All"}
 	resp, err := dev.CallMethod(getCapabilities)
 
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return nil, errors.New("camera is not available at " + dev.Params.Ipddr + " or it does not support ONVIF services")
 	}
+	/* 提前服务地址信息 */
 	dev.getSupportedServices(resp)
 	return dev, nil
 }
